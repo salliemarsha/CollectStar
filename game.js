@@ -1,23 +1,31 @@
 const config = {
     type: Phaser.AUTO,
+
     width: 800,
+
     height: 600,
 
     scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter:
+            Phaser.Scale.CENTER_BOTH
     },
 
     physics: {
-        default: 'arcade',
+
+        default:
+            'arcade',
 
         arcade: {
+
             gravity: {
                 y: 700
             },
 
             debug: false
+
         }
+
     },
 
     scene: {
@@ -25,20 +33,26 @@ const config = {
         create,
         update
     }
+
 };
 
-const game =
 new Phaser.Game(
     config
 );
 
 let player;
+
 let stars;
+
 let platforms;
+
 let cursors;
 
 let score = 0;
+
 let scoreText;
+
+
 
 function preload() {
 
@@ -58,6 +72,8 @@ function preload() {
     );
 
 }
+
+
 
 function create() {
 
@@ -81,85 +97,120 @@ function create() {
 
 
 
-    function platform(
+    function addPlatform(
         scene,
         x,
         y,
         w,
-        h
+        h = 6
     ) {
 
-        const r =
-            scene.add.rectangle(
-                x,
-                y,
-                w,
-                h,
-                0xffffff,
-                0
-            );
+        const p =
+            scene.add
+                .rectangle(
+                    x,
+                    y,
+                    w,
+                    h,
+                    0xffffff,
+                    0
+                );
 
         scene.physics
             .add
             .existing(
-                r,
+                p,
                 true
             );
 
         platforms.add(
-            r
+            p
         );
+
+        return p;
 
     }
 
 
 
-    platform(
+    addPlatform(
         this,
-        63,
-        360,
-        126,
-        12
+        64,
+        296,
+        128
     );
 
-    platform(
+
+
+    addPlatform(
         this,
-        398,
-        236,
-        178,
-        12
+        247,
+        222,
+        50
     );
 
-    platform(
+    addPlatform(
         this,
-        530,
-        206,
+        292,
+        216,
+        55
+    );
+
+    addPlatform(
+        this,
+        338,
         210,
-        12
+        50
     );
 
-    platform(
+
+
+    addPlatform(
         this,
-        660,
-        236,
-        185,
-        12
+        400,
+        192,
+        118
     );
 
-    platform(
+
+
+    addPlatform(
         this,
-        744,
-        356,
-        110,
-        12
+        463,
+        210,
+        50
     );
 
-    platform(
+    addPlatform(
         this,
-        405,
+        510,
+        216,
+        55
+    );
+
+    addPlatform(
+        this,
         556,
-        560,
-        12
+        222,
+        50
+    );
+
+
+
+    addPlatform(
+        this,
+        735,
+        276,
+        130
+    );
+
+
+
+    addPlatform(
+        this,
+        400,
+        398,
+        610
     );
 
 
@@ -169,7 +220,7 @@ function create() {
             .add
             .image(
                 70,
-                290,
+                240,
                 'girl'
             );
 
@@ -217,13 +268,13 @@ function create() {
                 setXY: {
 
                     x:
-                        340,
+                        300,
 
                     y:
-                        150,
+                        140,
 
                     stepX:
-                        90
+                        95
 
                 }
 
@@ -294,6 +345,8 @@ function create() {
             platforms
         );
 
+
+
     this.physics
         .add
         .overlap(
@@ -360,7 +413,7 @@ function update() {
     ) {
 
         player.setVelocityY(
-            -580
+            -640
         );
 
     }
@@ -408,7 +461,7 @@ function collectStar(
 
                     child.x,
 
-                    150,
+                    140,
 
                     true,
 
