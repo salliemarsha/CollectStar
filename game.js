@@ -10,8 +10,12 @@ const config = {
 
     physics: {
         default: 'arcade',
+
         arcade: {
-            gravity: { y: 600 },
+            gravity: {
+                y: 700
+            },
+
             debug: false
         }
     },
@@ -23,7 +27,10 @@ const config = {
     }
 };
 
-const game = new Phaser.Game(config);
+const game =
+new Phaser.Game(
+    config
+);
 
 let player;
 let stars;
@@ -35,9 +42,8 @@ let scoreText;
 
 function preload() {
 
-    // FOTO
     this.load.image(
-        'peta',
+        'bg',
         'assets/platform.jpg'
     );
 
@@ -50,36 +56,32 @@ function preload() {
         'star',
         'assets/star.png'
     );
+
 }
 
 function create() {
 
-    //--------------------------------
-    // BACKGROUND
-    //--------------------------------
-
-    const bg =
-        this.add.image(
+    this.add
+        .image(
             400,
             300,
-            'peta'
+            'bg'
+        )
+        .setDisplaySize(
+            800,
+            600
         );
 
-    bg.setDisplaySize(
-        800,
-        600
-    );
 
-
-
-    //--------------------------------
-    // PLATFORM GAIB
-    //--------------------------------
 
     platforms =
-        this.physics.add.staticGroup();
+        this.physics
+            .add
+            .staticGroup();
 
-    function buatPlatform(
+
+
+    function platform(
         scene,
         x,
         y,
@@ -87,7 +89,7 @@ function create() {
         h
     ) {
 
-        const rect =
+        const r =
             scene.add.rectangle(
                 x,
                 y,
@@ -97,126 +99,169 @@ function create() {
                 0
             );
 
-        scene.physics.add.existing(
-            rect,
-            true
-        );
+        scene.physics
+            .add
+            .existing(
+                r,
+                true
+            );
 
         platforms.add(
-            rect
+            r
         );
+
     }
 
-    // sesuaikan posisi rumput
-    buatPlatform(
+
+
+    platform(
         this,
-        90,
-        330,
-        180,
-        20
+        63,
+        360,
+        126,
+        12
     );
 
-    buatPlatform(
+    platform(
         this,
-        525,
-        440,
-        430,
-        20
+        398,
+        236,
+        178,
+        12
     );
 
-    buatPlatform(
+    platform(
         this,
-        730,
-        330,
-        140,
-        20
+        530,
+        206,
+        210,
+        12
     );
 
-    buatPlatform(
+    platform(
         this,
-        515,
-        220,
-        310,
-        20
+        660,
+        236,
+        185,
+        12
+    );
+
+    platform(
+        this,
+        744,
+        356,
+        110,
+        12
+    );
+
+    platform(
+        this,
+        405,
+        556,
+        560,
+        12
     );
 
 
-
-    //--------------------------------
-    // PLAYER
-    //--------------------------------
 
     player =
-        this.physics.add.image(
-            90,
-            200,
-            'girl'
-        );
+        this.physics
+            .add
+            .image(
+                70,
+                290,
+                'girl'
+            );
 
     player.setScale(
-        0.12
+        0.18
     );
 
     player.setBounce(
-        0.1
+        0
     );
 
     player.setCollideWorldBounds(
         true
     );
 
+    player.body.setSize(
+        player.width *
+        0.55,
 
+        player.height *
+        0.9
+    );
 
-    //--------------------------------
-    // STAR
-    //--------------------------------
+    player.body.setOffset(
+        player.width *
+        0.22,
 
-    stars =
-        this.physics.add.group({
-
-            key:
-                'star',
-
-            repeat:
-                6,
-
-            setXY: {
-                x: 120,
-                y: 50,
-                stepX: 90
-            }
-
-        });
-
-    stars.children.iterate(
-        function (child) {
-
-            child.setScale(
-                0.06
-            );
-
-            child.setBounceY(
-                Phaser.Math.FloatBetween(
-                    0.3,
-                    0.4
-                )
-            );
-
-        }
+        player.height *
+        0.05
     );
 
 
 
-    //--------------------------------
-    // SCORE
-    //--------------------------------
+    stars =
+        this.physics
+            .add
+            .group({
+
+                key:
+                    'star',
+
+                repeat:
+                    4,
+
+                setXY: {
+
+                    x:
+                        340,
+
+                    y:
+                        150,
+
+                    stepX:
+                        90
+
+                }
+
+            });
+
+
+
+    stars.children.iterate(
+
+        function (
+            child
+        ) {
+
+            child.setScale(
+                0.08
+            );
+
+            child.setBounceY(
+                0
+            );
+
+        }
+
+    );
+
+
 
     scoreText =
         this.add.text(
+
             20,
+
             20,
+
             'Score: 0',
+
             {
+
                 fontSize:
                     '28px',
 
@@ -228,55 +273,56 @@ function create() {
 
                 strokeThickness:
                     5
+
             }
+
         );
 
 
 
-    //--------------------------------
-    // COLLIDER
-    //--------------------------------
+    this.physics
+        .add
+        .collider(
+            player,
+            platforms
+        );
 
-    this.physics.add.collider(
-        player,
-        platforms
-    );
+    this.physics
+        .add
+        .collider(
+            stars,
+            platforms
+        );
 
-    this.physics.add.collider(
-        stars,
-        platforms
-    );
-
-    this.physics.add.overlap(
-        player,
-        stars,
-        collectStar,
-        null,
-        this
-    );
-
+    this.physics
+        .add
+        .overlap(
+            player,
+            stars,
+            collectStar,
+            null,
+            this
+        );
 
 
-    //--------------------------------
-    // KEYBOARD
-    //--------------------------------
 
     cursors =
-        this.input.keyboard.createCursorKeys();
+        this.input
+            .keyboard
+            .createCursorKeys();
+
 }
 
-function update() {
 
-    //--------------------------------
-    // GERAK
-    //--------------------------------
+
+function update() {
 
     if (
         cursors.left.isDown
     ) {
 
         player.setVelocityX(
-            -180
+            -230
         );
 
     }
@@ -286,7 +332,7 @@ function update() {
     ) {
 
         player.setVelocityX(
-            180
+            230
         );
 
     }
@@ -301,23 +347,20 @@ function update() {
 
 
 
-    //--------------------------------
-    // LOMPAT
-    //--------------------------------
-
     if (
 
         cursors.up.isDown &&
 
         (
-            player.body.touching.down ||
-            player.body.blocked.down
+            player.body.blocked.down ||
+
+            player.body.touching.down
         )
 
     ) {
 
         player.setVelocityY(
-            -400
+            -580
         );
 
     }
@@ -345,27 +388,36 @@ function collectStar(
 
 
 
-    // spawn ulang
     if (
+
         stars.countActive(
             true
         ) === 0
+
     ) {
 
         stars.children.iterate(
+
             function (
                 child
             ) {
 
                 child.enableBody(
+
                     true,
+
                     child.x,
-                    40,
+
+                    150,
+
                     true,
+
                     true
+
                 );
 
             }
+
         );
 
     }
