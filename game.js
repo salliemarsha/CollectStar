@@ -1,478 +1,294 @@
 const config = {
     type: Phaser.AUTO,
-
     width: 800,
-
     height: 600,
-
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter:
-            Phaser.Scale.CENTER_BOTH
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    physics: { 
+        default: 'arcade', 
+        arcade: { 
+            gravity: { y: 1100 }, 
+            debug: false,
+            fps: 60,
+            tileBias: 32 // Increase bias to prevent tunneling and jitter
+        } 
     },
-
-    physics: {
-
-        default:
-            'arcade',
-
-        arcade: {
-
-            gravity: {
-                y: 700
-            },
-
-            debug: false
-
-        }
-
-    },
-
-    scene: {
-        preload,
-        create,
-        update
-    }
-
+    scene: { preload, create, update }
 };
 
-new Phaser.Game(
-    config
-);
+new Phaser.Game(config);
 
-let player;
+let player, stars, platforms, visualGroup, cursors, bgStars;
+let score = 0, scoreText, currentLevel = 1, levelText, levelNameText;
+let isSpawning = false;
+let isGameOver = false;
 
-let stars;
-
-let platforms;
-
-let cursors;
-
-let score = 0;
-
-let scoreText;
-
-
+const PLAYER_SPEED = 320;
+const PLAYER_ACCEL = 1600;
+const PLAYER_DRAG = 1300;
+const JUMP_VELOCITY = -600;
 
 function preload() {
-
-    this.load.image(
-        'bg',
-        'assets/platform.jpg'
-    );
-
-    this.load.image(
-        'girl',
-        'assets/girl.png'
-    );
-
-    this.load.image(
-        'star',
-        'assets/star.png'
-    );
-
+    this.load.image('girl', 'assets/girl.png');
+    this.load.image('star', 'assets/star.png');
+    this.load.image('platform', 'assets/platform.png');
 }
-
-
 
 function create() {
-
-    this.add
-        .image(
-            400,
-            300,
-            'bg'
-        )
-        .setDisplaySize(
-            800,
-            600
-        );
-
-
-
-    platforms =
-        this.physics
-            .add
-            .staticGroup();
-
-
-
-    function addPlatform(
-        scene,
-        x,
-        y,
-        w,
-        h = 6
-    ) {
-
-        const p =
-            scene.add
-                .rectangle(
-                    x,
-                    y,
-                    w,
-                    h,
-                    0xffffff,
-                    0
-                );
-
-        scene.physics
-            .add
-            .existing(
-                p,
-                true
-            );
-
-        platforms.add(
-            p
-        );
-
-        return p;
-
+    // Setup static elements once
+    this.add.rectangle(0, 0, 800, 600, 0x0a0f2a).setOrigin(0, 0).setScrollFactor(0).setDepth(0);
+    bgStars = this.add.group();
+    for(let i = 0; i < 60; i++) {
+        let x = Phaser.Math.Between(0, 800);
+        let y = Phaser.Math.Between(0, 600);
+        let star = this.add.circle(x, y, Phaser.Math.FloatBetween(0.5, 1.8), 0xffffff, 0.4);
+        star.setDepth(1);
+        bgStars.add(star);
     }
 
-
-
-    addPlatform(
-        this,
-        64,
-        296,
-        128
-    );
-
-
-
-    addPlatform(
-        this,
-        247,
-        222,
-        50
-    );
-
-    addPlatform(
-        this,
-        292,
-        216,
-        55
-    );
-
-    addPlatform(
-        this,
-        338,
-        210,
-        50
-    );
-
-
-
-    addPlatform(
-        this,
-        400,
-        192,
-        118
-    );
-
-
-
-    addPlatform(
-        this,
-        463,
-        210,
-        50
-    );
-
-    addPlatform(
-        this,
-        510,
-        216,
-        55
-    );
-
-    addPlatform(
-        this,
-        556,
-        222,
-        50
-    );
-
-
-
-    addPlatform(
-        this,
-        735,
-        276,
-        130
-    );
-
-
-
-    addPlatform(
-        this,
-        400,
-        398,
-        610
-    );
-
-
-
-    player =
-        this.physics
-            .add
-            .image(
-                70,
-                240,
-                'girl'
-            );
-
-    player.setScale(
-        0.18
-    );
-
-    player.setBounce(
-        0
-    );
-
-    player.setCollideWorldBounds(
-        true
-    );
-
-    player.body.setSize(
-        player.width *
-        0.55,
-
-        player.height *
-        0.9
-    );
-
-    player.body.setOffset(
-        player.width *
-        0.22,
-
-        player.height *
-        0.05
-    );
-
-
-
-    stars =
-        this.physics
-            .add
-            .group({
-
-                key:
-                    'star',
-
-                repeat:
-                    4,
-
-                setXY: {
-
-                    x:
-                        300,
-
-                    y:
-                        140,
-
-                    stepX:
-                        95
-
-                }
-
-            });
-
-
-
-    stars.children.iterate(
-
-        function (
-            child
-        ) {
-
-            child.setScale(
-                0.08
-            );
-
-            child.setBounceY(
-                0
-            );
-
-        }
-
-    );
-
-
-
-    scoreText =
-        this.add.text(
-
-            20,
-
-            20,
-
-            'Score: 0',
-
-            {
-
-                fontSize:
-                    '28px',
-
-                color:
-                    '#ffffff',
-
-                stroke:
-                    '#000000',
-
-                strokeThickness:
-                    5
-
-            }
-
-        );
-
-
-
-    this.physics
-        .add
-        .collider(
-            player,
-            platforms
-        );
-
-    this.physics
-        .add
-        .collider(
-            stars,
-            platforms
-        );
-
-
-
-    this.physics
-        .add
-        .overlap(
-            player,
-            stars,
-            collectStar,
-            null,
-            this
-        );
-
-
-
-    cursors =
-        this.input
-            .keyboard
-            .createCursorKeys();
-
+    platforms = this.physics.add.staticGroup();
+    visualGroup = this.add.group();
+    stars = this.physics.add.group();
+    
+    player = this.physics.add.image(0, 0, 'girl').setScale(0.18).setOrigin(0.5, 1);
+    player.setDepth(10);
+    player.setCollideWorldBounds(false); 
+    player.setDragX(PLAYER_DRAG);
+    player.setMaxVelocity(PLAYER_SPEED, 900);
+    
+    // Fine-tuned collision box for stability
+    const bodyWidth = player.width * 0.50;
+    const bodyHeight = player.height * 0.85;
+    player.body.setSize(bodyWidth, bodyHeight);
+    
+    // Offset to prevent "embedded" look and jitter
+    const offsetX = (player.width - bodyWidth) * 0.5;
+    const offsetY = (player.height - bodyHeight) * 0.13 + (1 / 0.18); 
+    player.body.setOffset(offsetX, offsetY);
+
+    this.physics.add.collider(player, platforms, onPlatformCollide, null, this);
+    this.physics.add.overlap(player, stars, collectStar, null, this);
+    
+    const uiStyle = { fontSize: '24px', fontFamily: 'Arial', fill: '#fff', stroke: '#000', strokeThickness: 5 };
+    scoreText = this.add.text(25, 25, 'Score: 0', uiStyle).setDepth(100);
+    levelText = this.add.text(775, 25, 'Level: 1/5', uiStyle).setOrigin(1, 0).setDepth(100);
+
+    levelNameText = this.add.text(400, 25, '', { 
+        fontSize: '28px', fontFamily: 'Arial', fill: '#ffd700', stroke: '#000', strokeThickness: 5, fontStyle: 'bold'
+    }).setOrigin(0.5, 0).setDepth(100);
+    
+    cursors = this.input.keyboard.createCursorKeys();
+    loadLevel(this, currentLevel);
 }
 
+function createPlatform(scene, x, y, w, h) {
+    const shadow = scene.add.rectangle(x + 4, y + 4, w, h, 0x000000, 0.3).setDepth(4);
+    const plat = scene.add.tileSprite(x, y, w, h, 'platform').setDepth(5);
+    scene.physics.add.existing(plat, true);
+    
+    // Ensure static body is properly positioned
+    plat.body.updateFromGameObject();
+    platforms.add(plat);
+    
+    visualGroup.add(shadow);
+    visualGroup.add(plat);
+}
 
+function safeSpawnPlayer(scene, start) {
+    isSpawning = true;
+    player.body.setAllowGravity(false);
+    player.setVelocity(0, 0);
+    player.setAcceleration(0, 0);
+    player.setAlpha(0);
+    player.setScale(0.18); 
+    player.clearTint();
+    
+    player.setPosition(start.x, start.y - 120);
+    player.body.reset(player.x, player.y);
+    
+    scene.tweens.add({
+        targets: player,
+        alpha: 1,
+        y: start.y - 30, 
+        duration: 600,
+        ease: 'Cubic.easeOut',
+        onComplete: () => {
+            player.body.reset(player.x, player.y);
+            player.body.setAllowGravity(true);
+            isSpawning = false;
+        }
+    });
+}
+
+function resetGameState(scene) {
+    score = 0;
+    currentLevel = 1;
+    isGameOver = false;
+    isSpawning = false;
+    
+    scoreText.setText('Score: 0');
+    player.clearTint();
+    player.body.setEnable(true);
+    
+    // Clean up any remaining UI from previous sessions
+    scene.children.list.filter(child => child.type === 'Text' && (child.text === 'GAME OVER' || child.text === 'TRY AGAIN' || child.text === 'YOU WIN!' || child.text === 'PLAY AGAIN'))
+        .forEach(child => child.destroy());
+}
+
+function loadLevel(scene, level) {
+    isSpawning = true; // Block input during transition
+    scene.physics.world.pause();
+    scene.cameras.main.fadeOut(250, 0, 0, 0);
+    
+    scene.cameras.main.once('camerafadeoutcomplete', () => {
+        platforms.clear(true, true);
+        visualGroup.clear(true, true);
+        stars.clear(true, true);
+        scene.tweens.killTweensOf(player);
+
+        const levelData = LEVELS[level - 1];
+        if (!levelData) return;
+
+        levelNameText.setText(levelData.name);
+        levelText.setText(`Level: ${level}/${LEVELS.length}`);
+
+        levelData.platforms.forEach(p => createPlatform(scene, p.x, p.y, p.w, p.h));
+        
+        levelData.stars.forEach(s => {
+            let star = stars.create(s.x, s.y, 'star').setScale(0.08).setDepth(8);
+            star.body.setAllowGravity(false);
+            scene.tweens.add({
+                targets: star,
+                y: s.y - 12,
+                duration: 900 + Math.random() * 300,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        });
+
+        safeSpawnPlayer(scene, levelData.playerStart);
+        scene.cameras.main.fadeIn(250, 0, 0, 0);
+        scene.physics.world.resume();
+    });
+}
+
+function gameOver(scene) {
+    if (isGameOver) return;
+    isGameOver = true;
+    
+    scene.physics.world.pause();
+    player.setTint(0xff0000);
+    player.setVelocity(0, 0);
+    player.setAcceleration(0, 0);
+    
+    const uiStyle = { fontSize: '48px', fontFamily: 'Arial', fill: '#ff0000', stroke: '#000', strokeThickness: 8, fontStyle: 'bold' };
+    const gameOverText = scene.add.text(400, 250, 'GAME OVER', uiStyle).setOrigin(0.5).setDepth(200);
+    
+    const btnStyle = { fontSize: '32px', fontFamily: 'Arial', fill: '#fff', backgroundColor: '#8B5A2B', padding: { x: 20, y: 10 }, stroke: '#000', strokeThickness: 4 };
+    const tryAgainBtn = scene.add.text(400, 350, 'TRY AGAIN', btnStyle).setOrigin(0.5).setDepth(200).setInteractive({ useHandCursor: true });
+        
+    tryAgainBtn.once('pointerdown', () => {
+        gameOverText.destroy();
+        tryAgainBtn.destroy();
+        resetGameState(scene);
+        loadLevel(scene, 1);
+    });
+
+    tryAgainBtn.on('pointerover', () => tryAgainBtn.setStyle({ fill: '#ffd700' }));
+    tryAgainBtn.on('pointerout', () => tryAgainBtn.setStyle({ fill: '#fff' }));
+}
 
 function update() {
+    if (isSpawning || isGameOver) return;
 
-    if (
-        cursors.left.isDown
-    ) {
-
-        player.setVelocityX(
-            -230
-        );
-
+    if (cursors.left.isDown) {
+        player.setAccelerationX(-PLAYER_ACCEL);
+        player.setFlipX(true);
+    } else if (cursors.right.isDown) {
+        player.setAccelerationX(PLAYER_ACCEL);
+        player.setFlipX(false);
+    } else {
+        player.setAccelerationX(0);
     }
 
-    else if (
-        cursors.right.isDown
-    ) {
-
-        player.setVelocityX(
-            230
-        );
-
+    const isGrounded = player.body.blocked.down || player.body.touching.down;
+    if (cursors.up.isDown && isGrounded) {
+        player.setVelocityY(JUMP_VELOCITY);
+        this.tweens.killTweensOf(player);
+        this.tweens.add({
+            targets: player,
+            scaleX: 0.14,
+            scaleY: 0.22,
+            duration: 100,
+            yoyo: true,
+            ease: 'Quad.easeOut',
+            onComplete: () => player.setScale(0.18)
+        });
     }
 
-    else {
+    bgStars.getChildren().forEach(star => {
+        star.x -= 0.1 * star.radius;
+        if (star.x < -10) star.x = 810;
+    });
 
-        player.setVelocityX(
-            0
-        );
-
+    if (player.y > 650) {
+        gameOver(this);
     }
-
-
-
-    if (
-
-        cursors.up.isDown &&
-
-        (
-            player.body.blocked.down ||
-
-            player.body.touching.down
-        )
-
-    ) {
-
-        player.setVelocityY(
-            -640
-        );
-
-    }
-
 }
 
-
-
-function collectStar(
-    player,
-    star
-) {
-
-    star.disableBody(
-        true,
-        true
-    );
-
-    score += 10;
-
-    scoreText.setText(
-        'Score: ' +
-        score
-    );
-
-
-
-    if (
-
-        stars.countActive(
-            true
-        ) === 0
-
-    ) {
-
-        stars.children.iterate(
-
-            function (
-                child
-            ) {
-
-                child.enableBody(
-
-                    true,
-
-                    child.x,
-
-                    140,
-
-                    true,
-
-                    true
-
-                );
-
-            }
-
-        );
-
+function onPlatformCollide(player, platform) {
+    if (!player.body.wasTouching.down && player.body.touching.down) {
+        this.tweens.killTweensOf(player);
+        this.tweens.add({
+            targets: player,
+            scaleX: 0.23,
+            scaleY: 0.13,
+            duration: 100,
+            yoyo: true,
+            ease: 'Quad.easeOut',
+            onComplete: () => player.setScale(0.18)
+        });
     }
+}
 
+function collectStar(player, star) {
+    star.disableBody(true, true);
+    score += 10;
+    scoreText.setText('Score: ' + score);
+    
+    const emitter = this.add.particles(star.x, star.y, 'star', {
+        speed: { min: -120, max: 120 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 0.06, end: 0 },
+        blendMode: 'ADD',
+        lifespan: 600,
+        gravityY: 300,
+        emitting: false
+    });
+    
+    emitter.explode(12);
+    this.time.delayedCall(700, () => emitter.destroy());
+
+    if (stars.countActive(true) === 0) {
+        if (currentLevel < LEVELS.length) {
+            currentLevel++;
+            loadLevel(this, currentLevel);
+        } else {
+            const winText = this.add.text(400, 250, 'YOU WIN!', { 
+                fontSize: '72px', fill: '#ffd700', stroke: '#000', strokeThickness: 10, fontStyle: 'bold'
+            }).setOrigin(0.5).setDepth(200);
+            
+            player.body.setEnable(false);
+            const restartBtn = this.add.text(400, 380, 'PLAY AGAIN', {
+                fontSize: '32px', fontFamily: 'Arial', fill: '#fff', backgroundColor: '#8B5A2B', padding: { x: 20, y: 10 }, stroke: '#000', strokeThickness: 4
+            }).setOrigin(0.5).setDepth(200).setInteractive({ useHandCursor: true });
+
+            restartBtn.once('pointerdown', () => {
+                winText.destroy();
+                restartBtn.destroy();
+                resetGameState(this);
+                loadLevel(this, 1);
+            });
+        }
+    }
 }
